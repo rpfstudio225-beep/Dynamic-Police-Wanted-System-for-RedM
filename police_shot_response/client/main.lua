@@ -1,19 +1,37 @@
 Config = Config or {}   -- <--- FIX 1: Schutz, damit Config nie überschrieben wird
 
+local function DrawWantedText(text)
+    SetTextScale(0.5, 0.5)
+    SetTextFontForCurrentCommand(6)
+    SetTextCentre(true)
+    SetTextDropshadow(1, 1, 1, 0, 255)
+
+    local vt = CreateVarString(10, "LITERAL_STRING", text)
+    DisplayText(vt, 0.50, 0.06)
+end
+
 -- HUD Jail Timer
 Citizen.CreateThread(function()
     while true do
-        Wait(0)
+        Wait(0)    
         if jailEnd then
             local rem = math.floor((jailEnd - GetGameTimer())/1000)
             if rem>0 then
-                local t = CreateVarString(10,"LITERAL_STRING","Jail: "..rem.."s")
-                DisplayText(t,0.5,0.2)
+                DrawWantedText("~w~You must be free in: "..rem.." s")
+                TriggerEvent("vorp:NotifyTop",  "~e~Jailed for long time")
+                DoScreenFadeIn(1000)
+                IsScreenFadedIn()
+                DisplayRadar(true)
             end
         end
     end
 end)
 
+function ScreenFade()
+    DoScreenFadeOut(1000)
+    repeat Wait(0) until IsScreenFadedOut()
+    DisplayRadar(false)
+end
 ---------------------------------------------------------------------
 -- client/main.lua – Kill-Trigger, Waves, Lasso-Arrest, Manhunt
 ---------------------------------------------------------------------
@@ -79,7 +97,7 @@ local function DrawWantedText(text)
     SetTextColor(255, 40, 40, 220)
     SetTextFontForCurrentCommand(0)
     SetTextCentre(true)
-    SetTextDropshadow(1, 0, 0, 0, 255)
+    SetTextDropshadow(2, 0, 0, 0, 255)
 
     local vt = CreateVarString(10, "LITERAL_STRING", text)
     DisplayText(vt, 0.50, 0.05)
@@ -87,9 +105,8 @@ end
 
 Citizen.CreateThread(function()
     while true do
-        Wait(0)
-        if Config.UseWanted and WantedLevel > 0 and WantedText ~= "" then
-            DrawWantedText(WantedText)
+        Wait(10000)
+        if Config.UseWanted and WantedLevel > 5 and WantedText ~= "" then
         end
     end
 end)
@@ -115,6 +132,7 @@ local function UpdateSheriffBlip()
         PlayerPedId()
     )
     SetBlipScale(WantedBlip, 0.8)
+
 end
 
 local function SetWantedLevel(level)
@@ -151,7 +169,7 @@ local function SpawnPed(model, coords, heading)
     return ped
 end
 
-local function CleanupPolice()
+local function CleanupPolice(rem)
     Debug("CLEANUP Polizei & Pferde")
 
     for _, ped in ipairs(activePolice) do
@@ -189,6 +207,7 @@ local function EndPoliceEvent()
     JailCityConfig = nil
 
     EventCooldown = true
+
     Citizen.CreateThread(function()
         Wait(30000)
         EventCooldown = false
@@ -200,6 +219,7 @@ end
 -- START WELLE
 ---------------------------------------------------------------------
 local function StartPoliceEvent(cityKey, city)
+
     if EventActive or ManhuntActive or EventCooldown then return end
     if not cityKey or not city then return end
 
@@ -218,9 +238,27 @@ local function StartPoliceEvent(cityKey, city)
     SetWantedLevel(1)
     local p = GetEntityCoords(PlayerPedId())
     TriggerServerEvent("police:spawn_units", CurrentCityKey, CurrentWave, p)
+
+    TriggerEvent("bln_notify:send", {
+    title = "~#3c9ce6~You are wanted by the Sheriff!~e~",
+    description = (WantedText),
+    icon = "warning",
+    placement = "middle-left",
+    duration = 10000,
+    progress = {
+    enabled = true,
+    type = 'circle',
+    color = '#ffcc00'
+    },
+    keyActions = {
+    ['E'] = "accept",
+    ['F6'] = "decline"
+    }
+    })
 end
 
 local function StartNextWave()
+
     if not EventActive or not CurrentCityConfig then return end
 
     local maxWaves = CurrentCityConfig.MaxWaves or 5
@@ -241,12 +279,47 @@ local function StartNextWave()
             TriggerServerEvent("police:spawn_units", CurrentCityKey, CurrentWave)
         end
     end)
+
+    TriggerEvent("bln_notify:send", {
+    title = "~#f73434~You are must wanted!~e~",
+    description = (WantedText),
+    icon = "warning",
+    placement = "middle-left",
+    duration = 10000,
+    progress = {
+    enabled = true,
+    type = 'circle',
+    color = '#ffcc00'
+    },
+    keyActions = {
+    ['E'] = "accept",
+    ['F6'] = "decline"
+    }
+    })
 end
 
 ---------------------------------------------------------------------
 -- START MANHUNT
 ---------------------------------------------------------------------
 local function StartManhunt()
+
+    TriggerEvent("bln_notify:send", {
+    title = "~#f73434~You are wanted by the Marchal!~e~",
+    description = (WantedText),
+    icon = "cross",
+    placement = "middle-left",
+    duration = 10000,
+    progress = {
+        enabled = true,
+        type = 'circle',
+        color = '#ffcc00'
+    },
+    keyActions = {
+        ['E'] = "accept",
+        ['F6'] = "decline"
+    }
+    })
+
     if ManhuntActive or not CurrentCityConfig or not CurrentCityKey then return end
 
     Debug("MANHUNT startet in Stadt: " .. (CurrentCityConfig.Name or CurrentCityKey))
@@ -316,7 +389,7 @@ end)
 ---------------------------------------------------------------------
 Citizen.CreateThread(function()
     while true do
-        Wait(200)
+        Wait(2000)
 
         if not (EventActive or ManhuntActive) then
             goto continue
@@ -382,6 +455,8 @@ Citizen.CreateThread(function()
 
             CleanupPolice()
 
+            ScreenFade()
+            Wait(4000)
             ClearPedTasksImmediately(player)
             SetEntityCoords(player, jail.x, jail.y, jail.z)
             SetEntityHeading(player, jail.w)
@@ -459,7 +534,7 @@ end)
 ---------------------------------------------------------------------
 RegisterNetEvent("police:spawn_unit_client")
 AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave)
-
+                    
     local city = Config.Cities[cityKey]
     if not city then return end
 
@@ -568,6 +643,9 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
                         -- Jail nach Tackle
                         -------------------------------------------------
                         local jail = city.JailCoords or vector4(-271.67, 807.16, 119.37, 33.04)
+
+                        ScreenFade()
+                        Wait(4000)
 
                         CleanupPolice()
                         ClearPedTasksImmediately(player)

@@ -5,6 +5,7 @@
 Config = {}
 
 Config.Debug = true                 -- Aktiviert Debug-Ausgaben in der Konsole (für Fehleranalyse)
+--Config.Jail = true                 -- Aktiviert Debug-Ausgaben in der Konsole (für Fehleranalyse)
 Config.UseWanted = true             -- Wanted-System ein-/ausschalten
 Config.WantedDropTime = 40          -- Zeit (Sekunden), bis der Wanted-Level automatisch sinkt
 
@@ -21,11 +22,11 @@ Config.JailTimes = {
 }
 
 Config.WantedTexts = {
-    [1] = "GESUCHT 1 ",             -- Wanted-Stufe 1 Anzeige
-    [2] = "GESUCHT 2 ",            -- Wanted-Stufe 2 Anzeige
-    [3] = "GESUCHT 3 ",           -- Wanted-Stufe 3 Anzeige
-    [4] = "GESUCHT 4 ",          -- Wanted-Stufe 4 Anzeige
-    [5] = "MANHUNT!", -- Höchste Stufe + Manhunt aktiviert
+    [1] = "~#FF6B68~YOU ARE THE WANTED LEVEL ~e~1 ",             -- Wanted-Stufe 1 Anzeige
+    [2] = "~#FF6B68~YOU ARE THE WANTED LEVEL ~e~2 ",            -- Wanted-Stufe 2 Anzeige
+    [3] = "~#FF6B68~YOU ARE THE WANTED LEVEL ~e~3 ",           -- Wanted-Stufe 3 Anzeige
+    [4] = "~#FF6B68~YOU ARE THE WANTED LEVEL ~e~4 ",          -- Wanted-Stufe 4 Anzeige
+    [5] = "~#FF6B68~YOU ARE THE MUST WANTED ~e~MANHUNT!", -- Höchste Stufe + Manhunt aktiviert
 }
 
 ---------------------------------------------------------

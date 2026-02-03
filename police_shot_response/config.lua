@@ -5,7 +5,6 @@
 Config = {}
 
 Config.Debug = true                 -- Aktiviert Debug-Ausgaben in der Konsole (für Fehleranalyse)
---Config.Jail = true                 -- Aktiviert Debug-Ausgaben in der Konsole (für Fehleranalyse)
 Config.UseWanted = true             -- Wanted-System ein-/ausschalten
 Config.WantedDropTime = 40          -- Zeit (Sekunden), bis der Wanted-Level automatisch sinkt
 

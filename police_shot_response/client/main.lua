@@ -32,6 +32,7 @@ function ScreenFade()
     repeat Wait(0) until IsScreenFadedOut()
     DisplayRadar(false)
 end
+
 ---------------------------------------------------------------------
 -- client/main.lua – Kill-Trigger, Waves, Lasso-Arrest, Manhunt
 ---------------------------------------------------------------------
@@ -92,21 +93,12 @@ end
 ---------------------------------------------------------------------
 -- WANTED HUD
 ---------------------------------------------------------------------
-local function DrawWantedText(text)
-    SetTextScale(0.6, 0.6)
-    SetTextColor(255, 40, 40, 220)
-    SetTextFontForCurrentCommand(0)
-    SetTextCentre(true)
-    SetTextDropshadow(2, 0, 0, 0, 255)
-
-    local vt = CreateVarString(10, "LITERAL_STRING", text)
-    DisplayText(vt, 0.50, 0.05)
-end
 
 Citizen.CreateThread(function()
     while true do
-        Wait(10000)
-        if Config.UseWanted and WantedLevel > 5 and WantedText ~= "" then
+        Wait(0)
+        if Config.UseWanted and WantedLevel > 0 and WantedText ~= "" then
+         --   DrawWantedText(WantedText)
         end
     end
 end)
@@ -132,7 +124,6 @@ local function UpdateSheriffBlip()
         PlayerPedId()
     )
     SetBlipScale(WantedBlip, 0.8)
-
 end
 
 local function SetWantedLevel(level)
@@ -169,7 +160,7 @@ local function SpawnPed(model, coords, heading)
     return ped
 end
 
-local function CleanupPolice(rem)
+local function CleanupPolice()
     Debug("CLEANUP Polizei & Pferde")
 
     for _, ped in ipairs(activePolice) do
@@ -207,19 +198,34 @@ local function EndPoliceEvent()
     JailCityConfig = nil
 
     EventCooldown = true
-
     Citizen.CreateThread(function()
         Wait(30000)
         EventCooldown = false
         Debug("Cooldown vorbei, Event wieder möglich")
     end)
+
+    TriggerEvent("bln_notify:send", {
+    title = "~#3c9ce6~Your new Wanted Level!~e~",
+    description = (WantedText),
+    icon = "tick",
+    placement = "middle-left",
+    duration = 10000,
+    progress = {
+    enabled = true,
+    type = 'circle',
+    color = '#ffcc00'
+    },
+    keyActions = {
+    ['E'] = "accept",
+    ['F6'] = "decline"
+    }
+    })
 end
 
 ---------------------------------------------------------------------
 -- START WELLE
 ---------------------------------------------------------------------
 local function StartPoliceEvent(cityKey, city)
-
     if EventActive or ManhuntActive or EventCooldown then return end
     if not cityKey or not city then return end
 
@@ -240,7 +246,7 @@ local function StartPoliceEvent(cityKey, city)
     TriggerServerEvent("police:spawn_units", CurrentCityKey, CurrentWave, p)
 
     TriggerEvent("bln_notify:send", {
-    title = "~#3c9ce6~You are wanted by the Sheriff!~e~",
+    title = "~#f73434~You are must wanted!~e~",
     description = (WantedText),
     icon = "warning",
     placement = "middle-left",
@@ -258,7 +264,6 @@ local function StartPoliceEvent(cityKey, city)
 end
 
 local function StartNextWave()
-
     if not EventActive or not CurrentCityConfig then return end
 
     local maxWaves = CurrentCityConfig.MaxWaves or 5
@@ -281,7 +286,7 @@ local function StartNextWave()
     end)
 
     TriggerEvent("bln_notify:send", {
-    title = "~#f73434~You are must wanted!~e~",
+    title = "~#3c9ce6~You have new wanted Level!~e~",
     description = (WantedText),
     icon = "warning",
     placement = "middle-left",
@@ -302,6 +307,20 @@ end
 -- START MANHUNT
 ---------------------------------------------------------------------
 local function StartManhunt()
+    if ManhuntActive or not CurrentCityConfig or not CurrentCityKey then return end
+
+    Debug("MANHUNT startet in Stadt: " .. (CurrentCityConfig.Name or CurrentCityKey))
+
+    ManhuntActive = true
+    EventActive = false
+
+    SetWantedLevel(5)
+    CleanupPolice()
+
+    for i = 1, (CurrentCityConfig.ManhuntNPCCount or 5) do
+        local p = GetEntityCoords(PlayerPedId())
+        TriggerServerEvent("police:spawn_manhunt_unit", CurrentCityKey, p)
+    end
 
     TriggerEvent("bln_notify:send", {
     title = "~#f73434~You are wanted by the Marchal!~e~",
@@ -319,21 +338,6 @@ local function StartManhunt()
         ['F6'] = "decline"
     }
     })
-
-    if ManhuntActive or not CurrentCityConfig or not CurrentCityKey then return end
-
-    Debug("MANHUNT startet in Stadt: " .. (CurrentCityConfig.Name or CurrentCityKey))
-
-    ManhuntActive = true
-    EventActive = false
-
-    SetWantedLevel(5)
-    CleanupPolice()
-
-    for i = 1, (CurrentCityConfig.ManhuntNPCCount or 5) do
-        local p = GetEntityCoords(PlayerPedId())
-        TriggerServerEvent("police:spawn_manhunt_unit", CurrentCityKey, p)
-    end
 end
 
 ---------------------------------------------------------------------
@@ -389,7 +393,7 @@ end)
 ---------------------------------------------------------------------
 Citizen.CreateThread(function()
     while true do
-        Wait(2000)
+        Wait(200)
 
         if not (EventActive or ManhuntActive) then
             goto continue
@@ -457,6 +461,7 @@ Citizen.CreateThread(function()
 
             ScreenFade()
             Wait(4000)
+
             ClearPedTasksImmediately(player)
             SetEntityCoords(player, jail.x, jail.y, jail.z)
             SetEntityHeading(player, jail.w)
@@ -534,7 +539,7 @@ end)
 ---------------------------------------------------------------------
 RegisterNetEvent("police:spawn_unit_client")
 AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave)
-                    
+
     local city = Config.Cities[cityKey]
     if not city then return end
 
@@ -644,10 +649,10 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
                         -------------------------------------------------
                         local jail = city.JailCoords or vector4(-271.67, 807.16, 119.37, 33.04)
 
+                        CleanupPolice()
+
                         ScreenFade()
                         Wait(4000)
-
-                        CleanupPolice()
                         ClearPedTasksImmediately(player)
 
                         SetEntityCoords(player, jail.x, jail.y, jail.z)

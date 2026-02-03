@@ -23,7 +23,6 @@ end
 -- Wellen (zu Fuﬂ)
 RegisterNetEvent("police:spawn_units")
 AddEventHandler("police:spawn_units", function(cityKey, wave, playerCoords)
-
     local src = source
     local city = Config.Cities[cityKey]
     if not city then return end
@@ -87,7 +86,7 @@ AddEventHandler("police:spawn_units", function(cityKey, wave, playerCoords)
         else
             model = "cs_sheriffowens"
         end
-        TriggerClientEvent("police:spawn_unit_client", src, cityKey, model, spawn, wave)                    
+        TriggerClientEvent("police:spawn_unit_client", src, cityKey, model, spawn, wave)
     end
 end)
 
@@ -96,7 +95,6 @@ RegisterNetEvent("police:spawn_manhunt_unit")
 AddEventHandler("police:spawn_manhunt_unit", function(cityKey, playerCoords)
     local src = source
     local city = Config.Cities[cityKey]
-
     if not city then return end
 
     local list = city.SpawnPointsManhunt

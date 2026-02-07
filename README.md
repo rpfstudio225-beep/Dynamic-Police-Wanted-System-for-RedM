@@ -14,6 +14,4 @@ https://www.youtube.com/watch?v=SgTmz2usLbk
 
 # Requirements
 
-https://github.com/blnStudio/bln_notify
-
 https://github.com/VORPCORE/vorp_zonenotify

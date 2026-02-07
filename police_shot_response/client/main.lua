@@ -1,4 +1,4 @@
-Config = Config or {}   -- <--- FIX 1: Schutz, damit Config nie überschrieben wird
+Config = Config or {}   -- <--- FIX 1: Schutz, damit Config nie Ã¼berschrieben wird
 
 local function DrawWantedText(text)
     SetTextScale(0.5, 0.5)
@@ -18,10 +18,7 @@ Citizen.CreateThread(function()
             local rem = math.floor((jailEnd - GetGameTimer())/1000)
             if rem>0 then
                 DrawWantedText("~w~You must be free in: "..rem.." s")
-                TriggerEvent("vorp:NotifyTop",  "~e~Jailed for long time")
-                DoScreenFadeIn(1000)
-                IsScreenFadedIn()
-                DisplayRadar(true)
+                TriggerEvent("vorp:NotifyTop", "~e~Jailed for long time")
             end
         end
     end
@@ -33,8 +30,15 @@ function ScreenFade()
     DisplayRadar(false)
 end
 
+function ScreenFadeIn()
+    Wait(2000)   
+    DoScreenFadeIn(1000)
+    IsScreenFadedIn()
+    DisplayRadar(true)
+end
+
 ---------------------------------------------------------------------
--- client/main.lua – Kill-Trigger, Waves, Lasso-Arrest, Manhunt
+-- client/main.lua â€“ Kill-Trigger, Waves, Lasso-Arrest, Manhunt
 ---------------------------------------------------------------------
 
 local activePolice = {}
@@ -98,7 +102,6 @@ Citizen.CreateThread(function()
     while true do
         Wait(0)
         if Config.UseWanted and WantedLevel > 0 and WantedText ~= "" then
-         --   DrawWantedText(WantedText)
         end
     end
 end)
@@ -124,6 +127,7 @@ local function UpdateSheriffBlip()
         PlayerPedId()
     )
     SetBlipScale(WantedBlip, 0.8)
+    --TriggerEvent("vorp:NotifyLeft", "Your New Level is", (WantedText), "generic_textures", "tick", 6000, "COLOR_RED")
 end
 
 local function SetWantedLevel(level)
@@ -135,6 +139,8 @@ local function SetWantedLevel(level)
 
     WantedText = Config.WantedTexts[level] or ""
     UpdateSheriffBlip()
+    --TriggerEvent("vorp:NotifyLeft", "~e~You have new wanted Level", (WantedText), "generic_textures", "tick", 6000, "COLOR_GREEN")
+
 end
 
 ---------------------------------------------------------------------
@@ -201,25 +207,8 @@ local function EndPoliceEvent()
     Citizen.CreateThread(function()
         Wait(30000)
         EventCooldown = false
-        Debug("Cooldown vorbei, Event wieder möglich")
+        Debug("Cooldown vorbei, Event wieder mÃ¶glich")
     end)
-
-    TriggerEvent("bln_notify:send", {
-    title = "~#3c9ce6~Your new Wanted Level!~e~",
-    description = (WantedText),
-    icon = "tick",
-    placement = "middle-left",
-    duration = 10000,
-    progress = {
-    enabled = true,
-    type = 'circle',
-    color = '#ffcc00'
-    },
-    keyActions = {
-    ['E'] = "accept",
-    ['F6'] = "decline"
-    }
-    })
 end
 
 ---------------------------------------------------------------------
@@ -245,22 +234,8 @@ local function StartPoliceEvent(cityKey, city)
     local p = GetEntityCoords(PlayerPedId())
     TriggerServerEvent("police:spawn_units", CurrentCityKey, CurrentWave, p)
 
-    TriggerEvent("bln_notify:send", {
-    title = "~#f73434~You are must wanted!~e~",
-    description = (WantedText),
-    icon = "warning",
-    placement = "middle-left",
-    duration = 10000,
-    progress = {
-    enabled = true,
-    type = 'circle',
-    color = '#ffcc00'
-    },
-    keyActions = {
-    ['E'] = "accept",
-    ['F6'] = "decline"
-    }
-    })
+    TriggerEvent("vorp:NotifyLeft", "You are wanted by ~e~Sheriff", "Caution is come for jailed you...", "generic_textures", "star", 6000, "COLOR_GREEN")
+
 end
 
 local function StartNextWave()
@@ -285,22 +260,8 @@ local function StartNextWave()
         end
     end)
 
-    TriggerEvent("bln_notify:send", {
-    title = "~#3c9ce6~You have new wanted Level!~e~",
-    description = (WantedText),
-    icon = "warning",
-    placement = "middle-left",
-    duration = 10000,
-    progress = {
-    enabled = true,
-    type = 'circle',
-    color = '#ffcc00'
-    },
-    keyActions = {
-    ['E'] = "accept",
-    ['F6'] = "decline"
-    }
-    })
+    TriggerEvent("vorp:NotifyLeft", "You have new ~e~Wanted Level", "The wanted Huntman is begging...", "generic_textures", "tick", 6000, "COLOR_GREEN")
+
 end
 
 ---------------------------------------------------------------------
@@ -322,26 +283,11 @@ local function StartManhunt()
         TriggerServerEvent("police:spawn_manhunt_unit", CurrentCityKey, p)
     end
 
-    TriggerEvent("bln_notify:send", {
-    title = "~#f73434~You are wanted by the Marchal!~e~",
-    description = (WantedText),
-    icon = "cross",
-    placement = "middle-left",
-    duration = 10000,
-    progress = {
-        enabled = true,
-        type = 'circle',
-        color = '#ffcc00'
-    },
-    keyActions = {
-        ['E'] = "accept",
-        ['F6'] = "decline"
-    }
-    })
+    TriggerEvent("vorp:NotifyLeft", "You are wanted by the ~e~Marchal", "You are must wanted of the West...", "toasts_mp_generic", "toast_mp_customer_service", 6000, "COLOR_GREEN")
 end
 
 ---------------------------------------------------------------------
--- TOTEN-PRÜFUNG
+-- TOTEN-PRÃœFUNG
 ---------------------------------------------------------------------
 Citizen.CreateThread(function()
     while true do
@@ -381,7 +327,7 @@ Citizen.CreateThread(function()
                 Debug("Spieler tot in Welle 1 ? EVENT ENDE")
                 EndPoliceEvent()
             else
-                Debug("Spieler tot (Fallback außerhalb Welle 1) ? EVENT ENDE")
+                Debug("Spieler tot (Fallback auÃŸerhalb Welle 1) ? EVENT ENDE")
                 EndPoliceEvent()
             end
         end
@@ -427,7 +373,7 @@ Citizen.CreateThread(function()
 
         local pct = hp / maxHp
 
-        -- FIX 2 – Threshold immer gültig  
+        -- FIX 2 â€“ Threshold immer gÃ¼ltig  
         local threshold = tonumber(Config.LowHealthThreshold) or 0.18
 
         if pct <= threshold then
@@ -452,19 +398,30 @@ Citizen.CreateThread(function()
                     or 360
             end
 
-            Debug(string.format("Low HP (%.2f) ? Jail für %d Sekunden", pct, jailSeconds))
+            Debug(string.format("Low HP (%.2f) ? Jail fÃ¼r %d Sekunden", pct, jailSeconds))
 
             local jail = city and city.JailCoords or vector4(-271.67, 807.16, 119.37, 33.04)
             local rel = city and city.JailReleaseCoords or vector4(-275.96, 808.79, 119.38, 205.24)
 
-            CleanupPolice()
-
             ScreenFade()
             Wait(4000)
+            CleanupPolice()
+
+            Citizen.InvokeNative(0x7981037A96E7D174, player)
+            DisablePlayerFiring(player, true)
+            SetCurrentPedWeapon(player, GetHashKey('WEAPON_UNARMED'), true)
+            SetPedCanPlayGestureAnims(player, false)
 
             ClearPedTasksImmediately(player)
             SetEntityCoords(player, jail.x, jail.y, jail.z)
             SetEntityHeading(player, jail.w)
+
+            Citizen.InvokeNative(0x67406F2C8F87FC4F, player)
+            DisablePlayerFiring(player, false)
+            SetPedCanPlayGestureAnims(player, true)
+
+            ScreenFadeIn()
+            TriggerEvent("vorp:NotifyLeft", "~e~You are Jailed", "The Marchal as jailed you...", "menu_textures", "cross", 6000, "COLOR_RED")
 
             local endT = GetGameTimer() + jailSeconds * 1000
             jailEnd = endT
@@ -473,12 +430,19 @@ Citizen.CreateThread(function()
                 Wait(400)
             end
 
+            ScreenFade()
+            Wait(4000)
+
             ClearPedTasksImmediately(player)
             SetEntityCoords(player, rel.x, rel.y, rel.z)
             SetEntityHeading(player, rel.w)
 
+            ScreenFadeIn()
+
             Debug("Jail durch Low HP vorbei ? Spieler freigelassen & Event beendet")
             EndPoliceEvent()
+
+            TriggerEvent("vorp:NotifyLeft", "~e~You are Free", "The Marchal as freed you...", "generic_textures", "tick", 6000, "COLOR_GREEN")
         end
 
         ::continue::
@@ -601,17 +565,18 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
                 local tackleDist   = 2.0   -- ab hier wird getackelt
 
                 if not tackled then
-                    -- NPC bekommt EIN Follow-Task und behält den
+                    -- NPC bekommt EIN Follow-Task und behÃ¤lt den
                     if dist > tackleDist then
                         if not hasGoTask then
                             ClearPedTasks(ped)
                             TaskGoToEntity(ped, player, -1, 1.5, 2.4, 0, 0)
                             hasGoTask = true
                             Debug("Welle 1: NPC verfolgt Spieler (dist=" .. string.format("%.2f", dist) .. ")")
+                            --HandcuffPlayer(ped)
                         end
                     else
                         -------------------------------------------------
-                        -- TACKLE + Spieler fällt um
+                        -- TACKLE + Spieler fÃ¤llt um
                         -------------------------------------------------
                         tackled = true
                         hasGoTask = false
@@ -639,20 +604,21 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
                             )
                         end
 
-                        -- Spieler stolpert / fällt
-                        SetPedToRagdoll(player, 1500, 2000, 0, false, false, false)
-
-                        Wait(1100)
+                        SetEnableHandcuffs(player, true)
+                        Citizen.InvokeNative(0x7981037A96E7D174, player)
+                        DisablePlayerFiring(player, true)
+                        SetCurrentPedWeapon(player, GetHashKey('WEAPON_UNARMED'), true)
+                        SetPedCanPlayGestureAnims(player, false)
 
                         -------------------------------------------------
                         -- Jail nach Tackle
                         -------------------------------------------------
                         local jail = city.JailCoords or vector4(-271.67, 807.16, 119.37, 33.04)
 
-                        CleanupPolice()
-
                         ScreenFade()
                         Wait(4000)
+                        CleanupPolice()
+
                         ClearPedTasksImmediately(player)
 
                         SetEntityCoords(player, jail.x, jail.y, jail.z)
@@ -662,6 +628,15 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
 
                         EventActive   = false
                         ManhuntActive = false
+
+                        ClearPedSecondaryTask(player)
+                        SetEnableHandcuffs(player, false)
+                        Citizen.InvokeNative(0x67406F2C8F87FC4F, player)
+                        DisablePlayerFiring(player, false)
+                        SetPedCanPlayGestureAnims(player, true)
+
+                        ScreenFadeIn()
+                        TriggerEvent("vorp:NotifyLeft", "~e~You are Jailed", "The Sheriff as jailed you...", "menu_textures", "cross", 6000, "COLOR_RED")
 
                         Citizen.CreateThread(function()
                             local jailSeconds = (Config.JailTimes and Config.JailTimes.Wave1Arrest)
@@ -675,12 +650,19 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
                                 Wait(400)
                             end
 
+                            ScreenFade()
+                            Wait(4000)
+
                             local r = city.JailReleaseCoords or vector4(-275.96, 808.79, 119.38, 205.24)
                             SetEntityCoords(player, r.x, r.y, r.z)
                             SetEntityHeading(player, r.w)
 
+                            ScreenFadeIn()
+
                             Debug("Welle 1: Haftende (Tackle) ? Event beendet")
                             EndPoliceEvent()
+                            TriggerEvent("vorp:NotifyLeft", "~e~You are Free", "The Sheriff as freed you...", "generic_textures", "tick", 6000, "COLOR_GREEN")
+
                         end)
 
                         return
@@ -693,7 +675,7 @@ AddEventHandler("police:spawn_unit_client", function(cityKey, model, spawn, wave
 
     else
         -------------------------------------------------
-        -- WELLE 2+  (UNVERÄNDERT)
+        -- WELLE 2+  (UNVERÃ„NDERT)
         -------------------------------------------------
         local accBoost = (wave - 1) * 5
         local baseAcc = city.PedAccuracy or 60
@@ -859,7 +841,7 @@ Citizen.CreateThread(function()
                     if killer ~= player then goto continue_ped end
                     if cause == `WEAPON_UNARMED` then goto continue_ped end
 
-                    Debug("NPC durch Spieler getötet ? starte Polizeievent in Stadt: " .. cityKey)
+                    Debug("NPC durch Spieler getÃ¶tet ? starte Polizeievent in Stadt: " .. cityKey)
                     StartPoliceEvent(cityKey, city)
                 end
 

@@ -4,7 +4,7 @@
 
 Config = {}
 
-Config.Debug = true                 -- Aktiviert Debug-Ausgaben in der Konsole (für Fehleranalyse)
+Config.Debug = false                 -- Aktiviert Debug-Ausgaben in der Konsole (für Fehleranalyse)
 Config.UseWanted = true             -- Wanted-System ein-/ausschalten
 Config.WantedDropTime = 40          -- Zeit (Sekunden), bis der Wanted-Level automatisch sinkt
 
@@ -44,13 +44,13 @@ Config.Cities = {
         UseLassoInWave1 = true,      -- Welle 1: NPCs benutzen nur Lasso
 
         JailCoords = vector4(-271.67, 807.16, 119.37, 33.04),  -- Gefängnis-Position (Teleport beim Arrest)
-        JailReleaseCoords = vector4(-275.96, 808.79, 119.38, 205.24), -- Position beim Entlassen
+        JailReleaseCoords = vector4(-276.61, 799.89, 119.36, 195.48), -- Position beim Entlassen
 
         MaxWaves = 8,                -- Maximale Anzahl an Gegner-Wellen
         DelayBetweenWaves = 1000,    -- Zeit zwischen den Wellen (Millisekunden)
 
-        MinNPCPerWave = 3,           -- Minimum NPCs pro Welle
-        MaxNPCPerWave = 8,           -- Maximum NPCs pro Welle
+        MinNPCPerWave = 1,           -- Minimum NPCs pro Welle
+        MaxNPCPerWave = 2,           -- Maximum NPCs pro Welle
 
         PedWeapon = `WEAPON_REVOLVER_CATTLEMAN`, -- Waffe der Gegner
         WeaponAmmo = 250,            -- Munition der NPCs
